@@ -1,0 +1,5 @@
+{
+  "appId": "com.example.nordle",
+  "appName": "Nordle",
+  "webDir": "dist"
+}

@@ -1,0 +1,256 @@
+:root {
+  --bg-color: #121213;
+  --text-color: #ffffff;
+  --color-green: #538d4e;
+  --color-yellow: #b59f3b;
+  --color-gray: #3a3a3c;
+  --color-keyboard-bg: #818384;
+  --color-border: #3a3a3c;
+  --color-empty: #121213;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* App Header */
+.app-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--color-border);
+  position: relative;
+}
+
+.app-title {
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.header-btn {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  font-size: 1.5rem;
+  cursor: pointer;
+  position: absolute;
+}
+.header-btn.left { left: 20px; }
+.header-btn.right { right: 20px; }
+
+/* Grid specific */
+.game-board {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 10px;
+}
+
+.grid-container {
+  display: grid;
+  gap: 8px;
+}
+
+.tile {
+  width: 60px;
+  height: 60px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem;
+  font-weight: bold;
+  border: 2px solid var(--color-border);
+  text-transform: uppercase;
+  border-radius: 12px;
+}
+
+@media (max-width: 400px) {
+  .tile {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+  }
+}
+
+.tile.filled {
+  border-color: #565758;
+}
+
+.tile.green {
+  background-color: var(--color-green);
+  border-color: var(--color-green);
+  color: white;
+}
+
+.tile.yellow {
+  background-color: var(--color-yellow);
+  border-color: var(--color-yellow);
+  color: white;
+}
+
+.tile.gray {
+  background-color: var(--color-gray);
+  border-color: var(--color-gray);
+  color: white;
+}
+
+/* Animations */
+.flip-in {
+  animation: flipIn 0.25s ease-in forwards;
+}
+
+.flip-out {
+  animation: flipOut 0.25s ease-out forwards;
+}
+
+@keyframes flipIn {
+  from {
+    transform: rotateX(0deg);
+  }
+  to {
+    transform: rotateX(-90deg);
+  }
+}
+
+@keyframes flipOut {
+  from {
+    transform: rotateX(90deg);
+  }
+  to {
+    transform: rotateX(0deg);
+  }
+}
+
+/* Keyboard */
+.keyboard {
+  padding: 10px;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto 20px auto;
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+  gap: 6px;
+}
+
+.key {
+  height: 58px;
+  background-color: var(--color-keyboard-bg);
+  border-radius: 4px;
+  border: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: bold;
+  font-size: 1.25rem;
+  color: var(--text-color);
+  cursor: pointer;
+  flex: 1;
+  user-select: none;
+}
+
+.key.large {
+  flex: 1.5;
+  font-size: 1rem;
+}
+
+.key.green { background-color: var(--color-green); }
+.key.yellow { background-color: var(--color-yellow); }
+.key.gray { background-color: var(--color-gray); }
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--color-green);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  max-width: 300px;
+  margin: 10px auto;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-secondary {
+  background-color: var(--color-gray);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  max-width: 300px;
+  margin: 10px auto;
+  display: flex;
+  justify-content: center;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #212121;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 90%;
+  width: 400px;
+}
+
+/* Ad Banners */
+.ad-banner {
+  background-color: #f1f1f1;
+  color: #333;
+  text-align: center;
+  padding: 10px;
+  font-size: 0.8rem;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+  width: 100%;
+  max-width: 320px;
+  border-radius: 4px;
+}
