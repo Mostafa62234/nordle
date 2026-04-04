@@ -141,9 +141,12 @@ io.on('connection', (socket) => {
     socket.username = username;
     socket.difficulty = difficulty;
     
-    if (queues[difficulty].length > 0) {
-      // Find someone who is not disconnecting
-      const opponent = queues[difficulty].shift();
+    if (queues[difficulty].includes(socket)) return;
+
+    const oppIndex = queues[difficulty].findIndex(s => s.username !== username);
+    
+    if (oppIndex !== -1) {
+      const opponent = queues[difficulty].splice(oppIndex, 1)[0];
       const roomId = `room_${Date.now()}`;
       
       socket.join(roomId);
