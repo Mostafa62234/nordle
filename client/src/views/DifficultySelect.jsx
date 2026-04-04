@@ -2,7 +2,7 @@ import React from 'react';
 import { DIFFICULTIES } from '../gameLogic';
 import { useLanguage } from '../LanguageContext';
 
-export default function DifficultySelect({ navigate, setDifficulty, mode }) {
+export default function DifficultySelect({ navigate, setDifficulty, mode, setRoundsCount, roundsCount }) {
   const { t, lang } = useLanguage();
 
   const handleSelect = (diffName) => {
@@ -49,6 +49,26 @@ export default function DifficultySelect({ navigate, setDifficulty, mode }) {
            {t('choose_diff')} ({mode === 'online' ? t('pvp') : t('solo')})
         </div>
       </div>
+
+      {mode === 'online' && (
+        <div style={{ width: '100%', maxWidth: '500px', marginBottom: '20px', backgroundColor: '#1f1f1f', padding: '16px 20px', borderRadius: '8px', border: '1px solid #333' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{t('rounds_count') || 'Number of Rounds'}</span>
+            <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--color-yellow)' }}>{roundsCount}</span>
+          </div>
+          <input 
+            type="range" 
+            min="1" 
+            max="10" 
+            value={roundsCount}
+            onChange={(e) => setRoundsCount(parseInt(e.target.value))}
+            style={{ width: '100%', accentColor: 'var(--color-yellow)' }}
+          />
+          <p style={{ marginTop: '10px', fontSize: '0.8rem', color: '#888' }}>
+            {t('round_dispute_desc') || "If both players choose differently, a 50/50 flip decides."}
+          </p>
+        </div>
+      )}
 
       <div style={{ width: '100%', maxWidth: '500px' }}>
         {Object.entries(DIFFICULTIES).map(([name, data]) => {

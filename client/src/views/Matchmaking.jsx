@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { useLanguage } from '../LanguageContext';
 
-export default function Matchmaking({ navigate, socket, username, difficulty }) {
+export default function Matchmaking({ navigate, socket, username, difficulty, roundsCount }) {
   const { t } = useLanguage();
 
   useEffect(() => {
     if (!socket) return;
-    socket.emit('joinQueue', { username, difficulty });
+    socket.emit('joinQueue', { username, difficulty, roundsCount });
 
     const handleStart = () => {
       navigate('onlineGame');

@@ -13,6 +13,7 @@ import './index.css';
 function App() {
   const [currentView, setCurrentView] = useState('login');
   const [difficulty, setDifficulty] = useState('Normal');
+  const [roundsCount, setRoundsCount] = useState(3);
   const [username, setUsername] = useState('');
   const [socket, setSocket] = useState(null);
 
@@ -32,9 +33,9 @@ function App() {
       {currentView === 'login' && <Login navigate={navigate} setUsername={setUsername} />}
       {currentView === 'home' && <Home navigate={navigate} username={username} />}
       {currentView === 'difficultySelect' && <DifficultySelect navigate={navigate} setDifficulty={setDifficulty} mode="offline" />}
-      {currentView === 'difficultySelectOnline' && <DifficultySelect navigate={navigate} setDifficulty={setDifficulty} mode="online" />}
+      {currentView === 'difficultySelectOnline' && <DifficultySelect navigate={navigate} setDifficulty={setDifficulty} mode="online" setRoundsCount={setRoundsCount} roundsCount={roundsCount} />}
       {currentView === 'offlineGame' && <OfflineGame navigate={navigate} difficulty={difficulty} username={username} />}
-      {currentView === 'matchmaking' && <Matchmaking navigate={navigate} socket={socket} username={username} difficulty={difficulty} />}
+      {currentView === 'matchmaking' && <Matchmaking navigate={navigate} socket={socket} username={username} difficulty={difficulty} roundsCount={roundsCount} />}
       {currentView === 'onlineGame' && <OnlineGame navigate={navigate} socket={socket} username={username} difficulty={difficulty} />}
       {currentView === 'settings' && <Settings navigate={navigate} />}
       {currentView === 'metrics' && <Metrics navigate={navigate} username={username} />}

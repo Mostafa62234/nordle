@@ -127,21 +127,22 @@ function evaluateGuess(guessStr, secretStr) {
 }
 
 io.on('connection', (socket) => {
-  socket.on('joinQueue', async ({ username, difficulty }) => {
+  socket.on('joinQueue', async ({ username, difficulty, roundsCount }) => {
     try {
       const user = await db.getUser(username);
       if (user.banned_until && new Date(user.banned_until) > new Date()) {
         socket.emit('banned', { until: user.banned_until });
         return;
       }
+      socket.totalScore = user.total_score || 0;
     } catch (err) {
       console.error(err);
+      socket.totalScore = 0;
     }
 
     socket.username = username;
     socket.difficulty = difficulty;
-    try { socket.totalScore = user.total_score || 0; } catch(e) {}
-
+    socket.roundsCount = parseInt(roundsCount) || 3;
     
     if (queues[difficulty].includes(socket)) return;
 
@@ -156,10 +157,13 @@ io.on('connection', (socket) => {
       socket.roomId = roomId;
       opponent.roomId = roomId;
 
+      const matchRounds = Math.random() > 0.5 ? socket.roundsCount : opponent.roundsCount;
+
       rooms[roomId] = {
         id: roomId,
         difficulty,
         players: [opponent, socket],
+        totalRounds: matchRounds,
         p1Wins: 0,
         p2Wins: 0,
         round: 1,
@@ -179,11 +183,49 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     for (const diff in queues) {
       queues[diff] = queues[diff].filter(s => s !== socket);
     }
+
+    // Check if player abandoned an active match
+    for (const roomId in rooms) {
+      const room = rooms[roomId];
+      if (room.players.includes(socket)) {
+        const isP1 = room.players[0] === socket;
+        const opponent = isP1 ? room.players[1] : room.players[0];
+        
+        try { await db.deductPoints(socket.username, 100); } catch(e) {}
+        
+        opponent.emit('matchEnd', { winner: opponent.username, abandonment: true, p1Wins: room.p1Wins, p2Wins: room.p2Wins });
+        opponent.leave(roomId);
+        delete rooms[roomId];
+        break;
+      }
+    }
   });
+
+  socket.on('requestQuit', () => {
+    const room = rooms[socket.roomId];
+    if (!room) return;
+    const opponent = room.players[0] === socket ? room.players[1] : room.players[0];
+    opponent.emit('quitRequested', { by: socket.username });
+  });
+
+  socket.on('answerQuit', async ({ approved, requesterUsername }) => {
+    const room = rooms[socket.roomId];
+    if (!room) return;
+    
+    if (!approved) {
+      try { await db.deductPoints(requesterUsername, 100); } catch(e) {}
+    }
+    
+    io.to(room.id).emit('quitResolved', { approved, quitter: requesterUsername });
+    room.players[0].leave(room.id);
+    room.players[1].leave(room.id);
+    delete rooms[room.id];
+  });
+
 
   socket.on('submitGuess', ({ guess }) => {
     const roomId = socket.roomId;
@@ -227,7 +269,8 @@ function startRound(roomId) {
   room.p2Tries = 0;
 
   io.to(roomId).emit('roundStart', { 
-    round: room.round, 
+    round: room.round,
+    totalRounds: room.totalRounds,
     digitCount: conf.digits, 
     maxTries: conf.tries,
     p1: room.players[0].username,
@@ -243,7 +286,10 @@ function finishRound(roomId, winnerId) {
   if (winnerId === 1) room.p1Wins++;
   else if (winnerId === 2) room.p2Wins++;
 
-  if (room.p1Wins === 2 || room.p2Wins === 2 || room.round === 3) {
+  const winThreshold = Math.floor(room.totalRounds / 2) + 1;
+  const matchOver = room.p1Wins === winThreshold || room.p2Wins === winThreshold || room.round === room.totalRounds;
+
+  if (matchOver) {
     setTimeout(async () => {
       const p1Won = room.p1Wins > room.p2Wins;
       const p2Won = room.p2Wins > room.p1Wins;

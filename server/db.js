@@ -153,5 +153,16 @@ async function setBanStatus(username, untilTimestamp) {
     client.release();
   }
 }
+async function deductPoints(username, amount) {
+  const client = await pool.connect();
+  try {
+    await client.query(
+      'UPDATE users SET total_score = GREATEST(0, total_score - $1) WHERE username = $2',
+      [amount, username]
+    );
+  } finally {
+    client.release();
+  }
+}
 
-module.exports = { getUser, updateOfflineStats, updateOnlineStats, getLeaderboard, getUserRank, getAllUsersAdmin, setBanStatus };
+module.exports = { getUser, updateOfflineStats, updateOnlineStats, getLeaderboard, getUserRank, getAllUsersAdmin, setBanStatus, deductPoints };
