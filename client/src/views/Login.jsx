@@ -1,9 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../LanguageContext';
 
 export default function Login({ navigate, setUsername }) {
   const [val, setVal] = useState('');
+  const [pass, setPass] = useState('');
   const { t } = useLanguage();
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('nordle_user');
+    const savedPass = localStorage.getItem('nordle_pass');
+    if (savedUser) {
+      setVal(savedUser);
+      if (savedPass) setPass(savedPass);
+    }
+  }, []);
 
   const handleLogin = async () => {
     if (!val) return;
@@ -12,12 +22,20 @@ export default function Login({ navigate, setUsername }) {
       const res = await fetch(`${URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: val })
+        body: JSON.stringify({ username: val, password: pass })
       });
       if (res.ok) {
+        localStorage.setItem('nordle_user', val);
+        if (pass) localStorage.setItem('nordle_pass', pass);
+        
         setUsername(val);
         navigate('home');
       } else {
+        const errorData = await res.json().catch(() => null);
+        if (errorData && errorData.error === 'Invalid password') {
+          alert('Incorrect Password! Please try again.');
+          return;
+        }
         alert("Server issue (" + res.status + "). Entering Offline Mode as Guest.");
         setUsername('');
         navigate('home');
@@ -41,6 +59,13 @@ export default function Login({ navigate, setUsername }) {
         value={val} 
         onChange={e => setVal(e.target.value)} 
         placeholder={t('username_placeholder')}
+        style={{ padding: '10px', fontSize: '1.2rem', marginBottom: '10px', borderRadius: '5px', border: '1px solid #555', background: '#333', color: 'white' }}
+      />
+      <input 
+        type="password" 
+        value={pass} 
+        onChange={e => setPass(e.target.value)} 
+        placeholder="Password (Optional)"
         style={{ padding: '10px', fontSize: '1.2rem', marginBottom: '20px', borderRadius: '5px', border: '1px solid #555', background: '#333', color: 'white' }}
       />
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', maxWidth: '300px' }}>

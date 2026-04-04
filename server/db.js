@@ -11,6 +11,7 @@ async function initDB() {
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username TEXT UNIQUE,
+        password_hash TEXT,
         total_score INTEGER DEFAULT 0,
         games_played INTEGER DEFAULT 0,
         games_won INTEGER DEFAULT 0,
@@ -27,7 +28,8 @@ async function initDB() {
     // Ensure existing tables are updated
     await client.query(`
       ALTER TABLE users
-      ADD COLUMN IF NOT EXISTS banned_until TIMESTAMP;
+      ADD COLUMN IF NOT EXISTS banned_until TIMESTAMP,
+      ADD COLUMN IF NOT EXISTS password_hash TEXT;
     `);
   } finally {
     client.release();
@@ -36,14 +38,25 @@ async function initDB() {
 
 initDB().catch(console.error);
 
-async function getUser(username) {
+async function getUser(username, passwordHash) {
   const client = await pool.connect();
   try {
     const res = await client.query('SELECT * FROM users WHERE username = $1', [username]);
     if (res.rows.length > 0) {
-      return res.rows[0];
+      const user = res.rows[0];
+      
+      if (passwordHash) {
+        if (!user.password_hash) {
+          await client.query('UPDATE users SET password_hash = $1 WHERE username = $2', [passwordHash, username]);
+          user.password_hash = passwordHash;
+        } else if (user.password_hash !== passwordHash) {
+          throw new Error('Invalid password');
+        }
+      }
+      
+      return user;
     } else {
-      const insertRes = await client.query('INSERT INTO users (username) VALUES ($1) RETURNING *', [username]);
+      const insertRes = await client.query('INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING *', [username, passwordHash]);
       return insertRes.rows[0];
     }
   } finally {

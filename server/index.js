@@ -3,6 +3,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const crypto = require('crypto');
 const db = require('./db');
 
 const app = express();
@@ -16,10 +17,14 @@ const io = new Server(server, {
 
 // REST routes
 app.post('/api/login', async (req, res) => {
-  const { username } = req.body;
+  const { username, password } = req.body;
   if (!username) return res.status(400).json({ error: 'Username required' });
   try {
-    const user = await db.getUser(username);
+    let hash = null;
+    if (password) {
+      hash = crypto.createHash('sha256').update(password).digest('hex');
+    }
+    const user = await db.getUser(username, hash);
     res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
