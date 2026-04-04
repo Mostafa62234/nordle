@@ -48,6 +48,35 @@ app.post('/api/offline-result', async (req, res) => {
   }
 });
 
+// Admin Middleware
+const adminAuth = (req, res, next) => {
+  const adminKey = process.env.ADMIN_SECRET_KEY || 'nordle-secret-admin';
+  if (req.headers['x-admin-key'] === adminKey) {
+    next();
+  } else {
+    res.status(401).json({ error: 'Unauthorized Admin Key' });
+  }
+};
+
+app.get('/api/admin/users', adminAuth, async (req, res) => {
+  try {
+    const users = await db.getAllUsersAdmin();
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/ban', adminAuth, async (req, res) => {
+  const { username, untilTimestamp } = req.body;
+  try {
+    const updated = await db.setBanStatus(username, untilTimestamp);
+    res.json({ success: true, user: updated });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Matchmaking State
 const queues = { Easy: [], Normal: [], Hard: [], Extreme: [] };
 
@@ -98,7 +127,17 @@ function evaluateGuess(guessStr, secretStr) {
 }
 
 io.on('connection', (socket) => {
-  socket.on('joinQueue', ({ username, difficulty }) => {
+  socket.on('joinQueue', async ({ username, difficulty }) => {
+    try {
+      const user = await db.getUser(username);
+      if (user.banned_until && new Date(user.banned_until) > new Date()) {
+        socket.emit('banned', { until: user.banned_until });
+        return;
+      }
+    } catch (err) {
+      console.error(err);
+    }
+
     socket.username = username;
     socket.difficulty = difficulty;
     

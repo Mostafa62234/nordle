@@ -12,10 +12,17 @@ export default function Matchmaking({ navigate, socket, username, difficulty }) 
       navigate('onlineGame');
     };
 
+    const handleBanned = (data) => {
+      alert(`You are banned from online play until ${new Date(data.until).toLocaleString()}`);
+      navigate('home');
+    };
+
     socket.on('roundStart', handleStart);
+    socket.on('banned', handleBanned);
 
     return () => {
       socket.off('roundStart', handleStart);
+      socket.off('banned', handleBanned);
       socket.emit('leaveQueue');
     };
   }, [socket, username, difficulty, navigate]);

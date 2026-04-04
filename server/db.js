@@ -7,7 +7,6 @@ const pool = new Pool({
 async function initDB() {
   const client = await pool.connect();
   try {
-    await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username TEXT UNIQUE,
@@ -19,8 +18,15 @@ async function initDB() {
         online_matches_played INTEGER DEFAULT 0,
         online_wins INTEGER DEFAULT 0,
         online_losses INTEGER DEFAULT 0,
-        online_rounds_won INTEGER DEFAULT 0
+        online_rounds_won INTEGER DEFAULT 0,
+        banned_until TIMESTAMP
       )
+    `);
+
+    // Ensure existing tables are updated
+    await client.query(`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS banned_until TIMESTAMP;
     `);
   } finally {
     client.release();
@@ -124,4 +130,27 @@ async function getUserRank(username) {
   }
 }
 
-module.exports = { getUser, updateOfflineStats, updateOnlineStats, getLeaderboard, getUserRank };
+async function getAllUsersAdmin() {
+  const client = await pool.connect();
+  try {
+    const res = await client.query('SELECT username, total_score, games_played, games_won, online_matches_played, banned_until FROM users ORDER BY id DESC');
+    return res.rows;
+  } finally {
+    client.release();
+  }
+}
+
+async function setBanStatus(username, untilTimestamp) {
+  const client = await pool.connect();
+  try {
+    const res = await client.query(
+      'UPDATE users SET banned_until = $1 WHERE username = $2 RETURNING *',
+      [untilTimestamp, username]
+    );
+    return res.rows[0];
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = { getUser, updateOfflineStats, updateOnlineStats, getLeaderboard, getUserRank, getAllUsersAdmin, setBanStatus };
