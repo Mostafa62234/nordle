@@ -45,13 +45,13 @@ async function getUser(username, passwordHash) {
     if (res.rows.length > 0) {
       const user = res.rows[0];
       
-      if (passwordHash) {
-        if (!user.password_hash) {
-          await client.query('UPDATE users SET password_hash = $1 WHERE username = $2', [passwordHash, username]);
-          user.password_hash = passwordHash;
-        } else if (user.password_hash !== passwordHash) {
+      if (user.password_hash) {
+        if (!passwordHash || user.password_hash !== passwordHash) {
           throw new Error('Invalid password');
         }
+      } else if (passwordHash) {
+        await client.query('UPDATE users SET password_hash = $1 WHERE username = $2', [passwordHash, username]);
+        user.password_hash = passwordHash;
       }
       
       return user;
