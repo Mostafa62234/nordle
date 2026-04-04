@@ -65,7 +65,9 @@ const dictionary = {
     "match_draw": "MATCH DRAW!",
     "match_defeat": "MATCH DEFEAT!",
     "score": "Score: ",
-    "return_menu": "Return to Menu"
+    "return_menu": "Return to Menu",
+    "credits_btn": "About the Developer",
+    "credits_text": "This app is entirely developed and programmed by Mostafa Mohamed. Future games coming soon!"
   },
   ar: {
     "login_title": "تسجيل الدخول",
@@ -129,7 +131,9 @@ const dictionary = {
     "match_draw": "تعادل في المباراة!",
     "match_defeat": "هزيمة في المباراة!",
     "score": "النتيجة: ",
-    "return_menu": "العودة للقائمة"
+    "return_menu": "العودة للقائمة",
+    "credits_btn": "عن المطور",
+    "credits_text": "هذا التطبيق تم تطويره وبرمجته بالكامل بواسطة مصطفى محمد، ألعاب مستقبلية قادمة قريباً!"
   }
 };
 

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLanguage } from '../LanguageContext';
 import { useTheme } from '../ThemeContext';
 
 export default function Settings({ navigate }) {
   const { lang, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  const [showCredits, setShowCredits] = useState(false);
 
   const activeStyle = {
     backgroundColor: '#1dd05d',
@@ -64,6 +65,21 @@ export default function Settings({ navigate }) {
             Light Mode
           </button>
         </div>
+      </div>
+
+      <div style={{ width: '100%', maxWidth: '400px', backgroundColor: 'transparent', padding: '24px', borderRadius: '16px', border: '1px solid var(--color-border)', marginTop: '20px' }}>
+        <button 
+          onClick={() => setShowCredits(!showCredits)}
+          style={{ width: '100%', padding: '12px', borderRadius: '8px', backgroundColor: 'var(--color-keyboard-bg)', border: '1px solid var(--color-border)', color: 'var(--color-yellow)', fontWeight: 'bold', cursor: 'pointer', fontSize: '1rem' }}
+        >
+          {t('credits_btn')}
+        </button>
+
+        {showCredits && (
+          <div style={{ marginTop: '16px', padding: '16px', backgroundColor: '#facb3d1a', border: '1px solid var(--color-yellow)', borderRadius: '8px', color: 'var(--text-color)', lineHeight: '1.5', textAlign: 'center', animation: 'popIn 0.3s' }}>
+            <span style={{ fontSize: '0.95rem' }}>{t('credits_text')}</span>
+          </div>
+        )}
       </div>
     </div>
   );
