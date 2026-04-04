@@ -1,5 +1,6 @@
 {
-  "appId": "com.example.nordle",
+  "appId": "com.mostafa.nordle",
   "appName": "Nordle",
-  "webDir": "dist"
+  "webDir": "dist",
+  "bundledWebRuntime": false
 }

@@ -7,6 +7,7 @@ const pool = new Pool({
 async function initDB() {
   const client = await pool.connect();
   try {
+    await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username TEXT UNIQUE,

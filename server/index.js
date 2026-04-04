@@ -261,7 +261,9 @@ function finishRound(roomId, winnerId) {
   }
 }
 
-const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+const PORT = process.env.ALWAYSDATA_HTTPD_PORT || process.env.PORT || 3001;
+const HOST = process.env.ALWAYSDATA_HTTPD_IP || '0.0.0.0';
+
+server.listen(PORT, HOST, () => {
+  console.log(`Server listening on ${HOST}:${PORT}`);
 });

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import GameBoard from '../components/GameBoard';
 import Keyboard from '../components/Keyboard';
 import { useLanguage } from '../LanguageContext';
+import { playWinSound, playLoseSound } from '../sounds';
 
 export default function OnlineGame({ navigate, socket, username, difficulty }) {
   const { t } = useLanguage();
@@ -74,11 +75,15 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
     socket.on('roundEnd', (data) => {
       setIsRoundActive(false);
       setRoundResult(data); // { winner, secret }
+      if (data.winner === username) playWinSound();
+      else if (data.winner !== 'Draw') playLoseSound();
     });
 
     socket.on('matchEnd', (data) => {
       setIsRoundActive(false);
       setMatchResult(data);
+      if (data.winner === username) playWinSound();
+      else if (data.winner !== 'Draw') playLoseSound();
     });
 
     return () => {

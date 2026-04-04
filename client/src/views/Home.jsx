@@ -39,18 +39,49 @@ const NavItem = ({ iconPaths, label, onClick, iconBgColor, iconColor }) => {
 };
 
 export default function Home({ navigate, username }) {
-  const { t } = useLanguage();
+  const { t, lang, setLang } = useLanguage();
+  
+  const handleRestrictedAction = (destination) => {
+    if (!username) {
+      alert("You must log in to access this feature.");
+      navigate('login');
+      return;
+    }
+    navigate(destination);
+  };
+
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '80px', backgroundColor: '#121213' }}>
-      <div style={{ position: 'absolute', top: 10, right: 10, color: '#aaa', fontSize: '0.8rem' }}>{username}</div>
+    <div className="fade-slide-in" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '80px', backgroundColor: 'var(--bg-color)' }}>
+      {/* Top Bar for Guest Status and Language Toggle */}
+      <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: '10px' }}>
+        <button 
+          onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
+          style={{
+            background: 'transparent',
+            border: '1px solid #555',
+            color: 'var(--text-color)',
+            padding: '4px 12px',
+            borderRadius: '16px',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            fontWeight: 'bold'
+          }}
+        >
+          {lang === 'en' ? 'عربي' : 'EN'}
+        </button>
+      </div>
+
+      <div style={{ position: 'absolute', top: 10, right: 10, color: '#aaa', fontSize: '1rem', fontWeight: 'bold' }}>
+        {username || 'Guest'}
+      </div>
       
       {/* Title */}
-      <h1 style={{ fontSize: '4.5rem', marginBottom: '10px', display: 'flex', gap: '2px', fontWeight: '900', letterSpacing: '1px' }}>
+      <h1 dir="ltr" style={{ direction: 'ltr', fontSize: '4.5rem', marginBottom: '10px', display: 'flex', gap: '2px', fontWeight: '900', letterSpacing: '1px' }}>
         <span style={{color: '#1dd05d'}}>N</span>
         <span style={{color: '#facb3d'}}>O</span>
-        <span style={{color: '#ffffff'}}>R</span>
+        <span style={{color: 'var(--text-color)'}}>R</span>
         <span style={{color: '#1dd05d'}}>D</span>
-        <span style={{color: '#ffffff'}}>L</span>
+        <span style={{color: 'var(--text-color)'}}>L</span>
         <span style={{color: '#facb3d'}}>E</span>
       </h1>
       
@@ -77,7 +108,7 @@ export default function Home({ navigate, username }) {
         />
 
         <NavItem 
-          onClick={() => navigate('difficultySelectOnline')}
+          onClick={() => handleRestrictedAction('difficultySelectOnline')}
           label={t('play_online')}
           iconBgColor="#332200"
           iconColor="#facb3d"
@@ -92,7 +123,7 @@ export default function Home({ navigate, username }) {
         />
 
         <NavItem 
-          onClick={() => navigate('metrics')}
+          onClick={() => handleRestrictedAction('metrics')}
           label={t('metrics')}
           iconBgColor="#0b1e36"
           iconColor="#3b82f6"

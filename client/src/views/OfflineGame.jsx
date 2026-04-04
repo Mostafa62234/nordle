@@ -5,6 +5,7 @@ import { DIFFICULTIES, generateSecret, evaluateGuess } from '../gameLogic';
 import { saveGameResult } from '../metrics';
 import { incrementAdCounter, resetAdCounter } from '../mockAdManager';
 import { useLanguage } from '../LanguageContext';
+import { playWinSound, playLoseSound } from '../sounds';
 
 export default function OfflineGame({ navigate, difficulty, username }) {
   const { t } = useLanguage();
@@ -41,6 +42,9 @@ export default function OfflineGame({ navigate, difficulty, username }) {
     setGameWon(won);
     setGameOver(true);
     saveGameResult(username, won, difficulty, finalGuessesLength);
+    
+    if (won) playWinSound();
+    else playLoseSound();
     
     // Process Interstitial Ad Check
     const adCount = incrementAdCounter();
