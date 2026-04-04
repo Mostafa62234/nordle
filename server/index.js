@@ -34,10 +34,19 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/metrics/:username', async (req, res) => {
   const { username } = req.params;
   try {
-    const user = await db.getUser(username);
+    const user = await db.getUserProfile(username) || {};
     const rank = await db.getUserRank(username);
     const leaderboard = await db.getLeaderboard();
     res.json({ user, rank, leaderboard });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const leaderboard = await db.getLeaderboard();
+    res.json({ leaderboard });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -77,6 +86,38 @@ app.post('/api/admin/ban', adminAuth, async (req, res) => {
   try {
     const updated = await db.setBanStatus(username, untilTimestamp);
     res.json({ success: true, user: updated });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Friends API
+app.post('/api/friends/request', async (req, res) => {
+  const { requester, receiver } = req.body;
+  if (!requester || !receiver) return res.status(400).json({ error: 'Missing parameters' });
+  try {
+    const result = await db.sendFriendRequest(requester, receiver);
+    res.json(result); // { status: 'pending' | 'accepted' }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/friends/accept', async (req, res) => {
+  const { requester, receiver } = req.body; // requester is the one who sent the original request
+  if (!requester || !receiver) return res.status(400).json({ error: 'Missing parameters' });
+  try {
+    await db.acceptFriendRequest(requester, receiver);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/friends/:username', async (req, res) => {
+  try {
+    const friendships = await db.getFriendships(req.params.username);
+    res.json({ friendships });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -131,8 +172,79 @@ function evaluateGuess(guessStr, secretStr) {
   return result;
 }
 
+const activeUsers = {};
+
 io.on('connection', (socket) => {
+  socket.on('identify', (username) => {
+    if (!username) return;
+    socket.username = username;
+    activeUsers[username] = socket.id;
+    io.emit('userStatus', { username, online: true });
+  });
+
+  socket.on('checkStatuses', (usernames) => {
+    if (!Array.isArray(usernames)) return;
+    const statuses = {};
+    for (const u of usernames) {
+      statuses[u] = !!activeUsers[u];
+    }
+    socket.emit('statusesResult', statuses);
+  });
+
+  socket.on('inviteFriend', ({ targetUsername, difficulty, roundsCount }) => {
+    const targetSocketId = activeUsers[targetUsername];
+    if (targetSocketId) {
+      io.to(targetSocketId).emit('receiveInvite', { 
+        from: socket.username, 
+        difficulty, 
+        roundsCount 
+      });
+    }
+  });
+
+  socket.on('respondToInvite', ({ from, accepted, difficulty, roundsCount }) => {
+    const requesterSocketId = activeUsers[from];
+    if (!requesterSocketId) return; // Requester disconnected
+
+    if (!accepted) {
+      io.to(requesterSocketId).emit('inviteDeclined', { by: socket.username });
+      return;
+    }
+
+    const requesterSocket = io.sockets.sockets.get(requesterSocketId);
+    if (!requesterSocket) return;
+
+    // Both are available, create a match
+    const roomId = `room_friends_${Date.now()}`;
+    socket.join(roomId);
+    requesterSocket.join(roomId);
+    socket.roomId = roomId;
+    requesterSocket.roomId = roomId;
+    socket.difficulty = difficulty;
+    requesterSocket.difficulty = difficulty;
+
+    rooms[roomId] = {
+      id: roomId,
+      difficulty,
+      players: [requesterSocket, socket],
+      totalRounds: parseInt(roundsCount) || 3,
+      p1Wins: 0,
+      p2Wins: 0,
+      round: 1,
+      p1Tries: 0,
+      p2Tries: 0
+    };
+
+    io.to(roomId).emit('matchFound');
+    startRound(roomId);
+  });
+
   socket.on('joinQueue', async ({ username, difficulty, roundsCount }) => {
+    if (!socket.username) {
+      socket.username = username;
+      activeUsers[username] = socket.id;
+      io.emit('userStatus', { username, online: true });
+    }
     try {
       const user = await db.getUser(username);
       if (user.banned_until && new Date(user.banned_until) > new Date()) {
@@ -145,7 +257,7 @@ io.on('connection', (socket) => {
       socket.totalScore = 0;
     }
 
-    socket.username = username;
+    // socket.username already set
     socket.difficulty = difficulty;
     socket.roundsCount = parseInt(roundsCount) || 3;
     
@@ -190,6 +302,11 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', async () => {
+    if (socket.username) {
+      delete activeUsers[socket.username];
+      io.emit('userStatus', { username: socket.username, online: false });
+    }
+
     for (const diff in queues) {
       queues[diff] = queues[diff].filter(s => s !== socket);
     }

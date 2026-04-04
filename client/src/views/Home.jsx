@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLanguage } from '../LanguageContext';
+import FriendsModal from '../components/FriendsModal';
 
 const NavItem = ({ iconPaths, label, onClick, iconBgColor, iconColor }) => {
   return (
@@ -38,16 +39,18 @@ const NavItem = ({ iconPaths, label, onClick, iconBgColor, iconColor }) => {
   );
 };
 
-export default function Home({ navigate, username }) {
+export default function Home({ navigate, username, socket }) {
   const { t, lang, setLang } = useLanguage();
+  const [showFriends, setShowFriends] = useState(false);
   
-  const handleRestrictedAction = (destination) => {
+  const handleRestrictedAction = (action) => {
     if (!username) {
       alert("You must log in to access this feature.");
       navigate('login');
       return;
     }
-    navigate(destination);
+    if (typeof action === 'function') action();
+    else navigate(action);
   };
 
   return (
@@ -86,7 +89,7 @@ export default function Home({ navigate, username }) {
       </h1>
       
       {/* Subtitle */}
-      <div style={{ fontSize: '0.9rem', letterSpacing: '4px', color: '#777', marginBottom: '60px', fontWeight: '600' }}>
+      <div style={{ fontSize: '0.9rem', letterSpacing: '4px', color: '#777', marginBottom: '40px', fontWeight: '600' }}>
         {t('subtitle')}
       </div>
 
@@ -118,6 +121,21 @@ export default function Home({ navigate, username }) {
               <path d="M1.42 9a16 16 0 0 1 21.16 0" />
               <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
               <line x1="12" y1="20" x2="12.01" y2="20" />
+            </>
+          }
+        />
+
+        <NavItem 
+          onClick={() => handleRestrictedAction(() => setShowFriends(true))}
+          label="Friends"
+          iconBgColor="#3b0764"
+          iconColor="#d8b4fe"
+          iconPaths={
+            <>
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </>
           }
         />
@@ -156,6 +174,14 @@ export default function Home({ navigate, username }) {
         <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#facb3d' }} />
         <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#555' }} />
       </div>
+
+      {showFriends && (
+        <FriendsModal 
+          username={username} 
+          socket={socket} 
+          onClose={() => setShowFriends(false)} 
+        />
+      )}
     </div>
   );
 }

@@ -6,11 +6,19 @@ export default function Metrics({ navigate, username }) {
   const { t, lang } = useLanguage();
   const [localMetrics, setLocalMetrics] = useState(null);
   const [serverStats, setServerStats] = useState(null);
+  const [leaderboardData, setLeaderboardData] = useState([]);
 
   useEffect(() => {
     setLocalMetrics(loadLocalMetrics());
+    const URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+    
+    // Always fetch leaderboard
+    fetch(`${URL}/api/leaderboard`)
+      .then(res => res.json())
+      .then(data => setLeaderboardData(data.leaderboard || []))
+      .catch(err => console.error("Could not fetch leaderboard", err));
+
     if (username) {
-      const URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
       fetch(`${URL}/api/metrics/${username}`)
         .then(res => res.json())
         .then(data => setServerStats(data))
@@ -61,12 +69,12 @@ export default function Metrics({ navigate, username }) {
         </div>
       )}
 
-      {serverStats && serverStats.leaderboard && (
+      {leaderboardData && leaderboardData.length > 0 && (
         <div style={{ width: '100%', maxWidth: '400px', backgroundColor: '#3f3f46', padding: '20px', borderRadius: '12px', marginBottom: '20px' }}>
           <h3 style={{ marginBottom: '15px', color: 'var(--color-yellow)' }}>{t('global_leaderbd')}</h3>
-          <p style={{ marginBottom: '10px' }}>{t('rank')}: <strong>#{rank}</strong> ({t('total_score')}: {user.total_score || 0})</p>
+          {username && <p style={{ marginBottom: '10px' }}>{t('rank')}: <strong>#{rank || '-'}</strong> ({t('total_score')}: {user.total_score || 0})</p>}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-             {serverStats.leaderboard.map((lbUser, idx) => (
+             {leaderboardData.map((lbUser, idx) => (
                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', backgroundColor: lbUser.username === username ? '#52525b' : '#27272a', borderRadius: '5px' }}>
                  <span>{idx + 1}. {lbUser.username}</span>
                  <span>{lbUser.total_score} pts</span>

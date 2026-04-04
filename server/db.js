@@ -25,6 +25,16 @@ async function initDB() {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS friendships (
+        id SERIAL PRIMARY KEY,
+        requester TEXT,
+        receiver TEXT,
+        status TEXT DEFAULT 'pending',
+        UNIQUE(requester, receiver)
+      )
+    `);
+
     // Ensure existing tables are updated
     await client.query(`
       ALTER TABLE users
@@ -178,4 +188,67 @@ async function deductPoints(username, amount) {
   }
 }
 
-module.exports = { getUser, updateOfflineStats, updateOnlineStats, getLeaderboard, getUserRank, getAllUsersAdmin, setBanStatus, deductPoints };
+async function sendFriendRequest(requester, receiver) {
+  const client = await pool.connect();
+  try {
+    // Check if reverse request exists
+    const checkRes = await client.query('SELECT status FROM friendships WHERE requester = $1 AND receiver = $2', [receiver, requester]);
+    if (checkRes.rows.length > 0 && checkRes.rows[0].status === 'pending') {
+      // Auto-accept if they already requested us
+      await client.query('UPDATE friendships SET status = $1 WHERE requester = $2 AND receiver = $3', ['accepted', receiver, requester]);
+      return { status: 'accepted' };
+    }
+    
+    // Insert new request
+    await client.query(
+      'INSERT INTO friendships (requester, receiver, status) VALUES ($1, $2, $3) ON CONFLICT (requester, receiver) DO NOTHING RETURNING *',
+      [requester, receiver, 'pending']
+    );
+    return { status: 'pending' };
+  } finally {
+    client.release();
+  }
+}
+
+async function acceptFriendRequest(requester, receiver) {
+  const client = await pool.connect();
+  try {
+    await client.query('UPDATE friendships SET status = $1 WHERE requester = $2 AND receiver = $3', ['accepted', requester, receiver]);
+  } finally {
+    client.release();
+  }
+}
+
+async function getFriendships(username) {
+  const client = await pool.connect();
+  try {
+    const res = await client.query(`
+      SELECT requester, receiver, status 
+      FROM friendships 
+      WHERE requester = $1 OR receiver = $1
+    `, [username]);
+    return res.rows;
+  } finally {
+    client.release();
+  }
+}
+
+async function getUserProfile(username) {
+  const client = await pool.connect();
+  try {
+    const res = await client.query(
+      'SELECT username, total_score, games_played, games_won, games_lost, total_guesses, online_matches_played, online_wins, online_losses, online_rounds_won, banned_until FROM users WHERE username = $1',
+      [username]
+    );
+    if (res.rows.length > 0) return res.rows[0];
+    return null;
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = { 
+  getUser, getUserProfile, updateOfflineStats, updateOnlineStats, getLeaderboard, getUserRank, 
+  getAllUsersAdmin, setBanStatus, deductPoints,
+  sendFriendRequest, acceptFriendRequest, getFriendships
+};
