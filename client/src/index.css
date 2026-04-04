@@ -55,8 +55,8 @@ body {
   cursor: pointer;
   position: absolute;
 }
-.header-btn.left { left: 20px; }
-.header-btn.right { right: 20px; }
+.header-btn.left { inset-inline-start: 20px; }
+.header-btn.right { inset-inline-end: 20px; }
 
 /* Grid specific */
 .game-board {

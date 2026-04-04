@@ -4,8 +4,10 @@ import Keyboard from '../components/Keyboard';
 import { DIFFICULTIES, generateSecret, evaluateGuess } from '../gameLogic';
 import { saveGameResult } from '../metrics';
 import { incrementAdCounter, resetAdCounter } from '../mockAdManager';
+import { useLanguage } from '../LanguageContext';
 
 export default function OfflineGame({ navigate, difficulty, username }) {
+  const { t } = useLanguage();
   const [secret, setSecret] = useState('');
   const [guesses, setGuesses] = useState([]);
   const [currentGuess, setCurrentGuess] = useState('');
@@ -125,10 +127,10 @@ export default function OfflineGame({ navigate, difficulty, username }) {
       {gameOver && !showAd && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h2 style={{ marginBottom: '10px' }}>{gameWon ? 'You Win!' : 'Game Over'}</h2>
-            <p style={{ marginBottom: '20px' }}>The secret was: <strong>{secret}</strong></p>
-            <button className="btn-primary" onClick={initGame}>Play Again</button>
-            <button className="btn-secondary" onClick={() => navigate('home')}>Main Menu</button>
+            <h2 style={{ marginBottom: '10px' }}>{gameWon ? t('victory') : t('game_over')}</h2>
+            <p style={{ marginBottom: '20px' }}>{t('secret_was')}<strong>{secret}</strong></p>
+            <button className="btn-primary" onClick={initGame}>{t('play_again_btn')}</button>
+            <button className="btn-secondary" onClick={() => navigate('home')}>{t('home_btn')}</button>
           </div>
         </div>
       )}

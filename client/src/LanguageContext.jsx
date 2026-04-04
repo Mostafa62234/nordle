@@ -47,7 +47,25 @@ const dictionary = {
     "online_record": "Online Record",
     "matches": "Matches",
     "rounds_won": "Rounds Won",
-    "login_subtitle": "Enter a username to continue"
+    "login_subtitle": "Enter a username to continue",
+    "matchmaking": "MATCHMAKING",
+    "queuing_for": "Queuing for ",
+    "mode": " Mode...",
+    "cancel": "Cancel",
+    "quit": "Quit",
+    "round_of": "Round",
+    "vs": "vs",
+    "out_of_tries": "Out of Tries!",
+    "waiting_opp_finish": "Waiting for opponent to finish...",
+    "you_won_round": "You won the round!",
+    "round_draw": "Round Draw",
+    "opp_won_round": "Opponent won the round!",
+    "next_round": "Next round starting soon...",
+    "match_victory": "MATCH VICTORY!",
+    "match_draw": "MATCH DRAW!",
+    "match_defeat": "MATCH DEFEAT!",
+    "score": "Score: ",
+    "return_menu": "Return to Menu"
   },
   ar: {
     "login_title": "تسجيل الدخول",
@@ -93,7 +111,25 @@ const dictionary = {
     "online_record": "السجل على الإنترنت",
     "matches": "مباريات",
     "rounds_won": "جولات الفوز",
-    "login_subtitle": "أدخل اسم المستخدم للمتابعة"
+    "login_subtitle": "أدخل اسم المستخدم للمتابعة",
+    "matchmaking": "البحث عن مباراة",
+    "queuing_for": "في الانتظار للعب بنمط ",
+    "mode": "...",
+    "cancel": "إلغاء",
+    "quit": "خروج",
+    "round_of": "جولة",
+    "vs": "ضد",
+    "out_of_tries": "نفدت المحاولات!",
+    "waiting_opp_finish": "في انتظار انتهاء الخصم...",
+    "you_won_round": "لقد فزت بالجولة!",
+    "round_draw": "تعادل في الجولة",
+    "opp_won_round": "فاز الخصم بالجولة!",
+    "next_round": "الجولة التالية ستبدأ قريباً...",
+    "match_victory": "انتصار في المباراة!",
+    "match_draw": "تعادل في المباراة!",
+    "match_defeat": "هزيمة في المباراة!",
+    "score": "النتيجة: ",
+    "return_menu": "العودة للقائمة"
   }
 };
 

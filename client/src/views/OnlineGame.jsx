@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import GameBoard from '../components/GameBoard';
 import Keyboard from '../components/Keyboard';
+import { useLanguage } from '../LanguageContext';
 
 export default function OnlineGame({ navigate, socket, username, difficulty }) {
+  const { t } = useLanguage();
   const [round, setRound] = useState(1);
   const [digits, setDigits] = useState(4);
   const [maxTries, setMaxTries] = useState(4);
@@ -113,9 +115,9 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <header className="app-header">
-        <button className="header-btn left" onClick={() => navigate('home')}>Quit</button>
-        <span className="app-title">PvP (Round {round}/3)</span>
-        <span className="header-btn right" style={{ fontSize: '0.8rem', color: '#ccc' }}>vs {opponentName}</span>
+        <button className="header-btn left" onClick={() => navigate('home')}>{t('quit')}</button>
+        <span className="app-title">{t('pvp')} ({t('round_of')} {round}/3)</span>
+        <span className="header-btn right" style={{ fontSize: '0.8rem', color: '#ccc' }}>{t('vs')} {opponentName}</span>
       </header>
 
       <GameBoard 
@@ -131,8 +133,8 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
       {outOfTries && !roundResult && !matchResult && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ opacity: 0.9 }}>
-            <h2>Out of Tries!</h2>
-            <p>Waiting for opponent to finish...</p>
+            <h2>{t('out_of_tries')}</h2>
+            <p>{t('waiting_opp_finish')}</p>
           </div>
         </div>
       )}
@@ -140,9 +142,9 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
       {roundResult && !matchResult && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ animation: 'popIn 0.3s' }}>
-            <h2>{roundResult.winner === username ? 'You won the round!' : (roundResult.winner === 'Draw' ? 'Round Draw' : 'Opponent won the round!')}</h2>
-            <p>Secret was: <strong>{roundResult.secret}</strong></p>
-            <p style={{ marginTop: '10px', fontSize: '0.9rem', color: '#999' }}>Next round starting soon...</p>
+            <h2>{roundResult.winner === username ? t('you_won_round') : (roundResult.winner === 'Draw' ? t('round_draw') : t('opp_won_round'))}</h2>
+            <p>{t('secret_was')}<strong>{roundResult.secret}</strong></p>
+            <p style={{ marginTop: '10px', fontSize: '0.9rem', color: '#999' }}>{t('next_round')}</p>
           </div>
         </div>
       )}
@@ -150,9 +152,9 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
       {matchResult && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ border: matchResult.winner === username ? '2px solid var(--color-green)' : '2px solid var(--color-red)' }}>
-            <h2>{matchResult.winner === username ? 'MATCH VICTORY!' : (matchResult.winner === 'Draw' ? 'MATCH DRAW' : 'MATCH DEFEAT')}</h2>
-            <p style={{ margin: '15px 0' }}>Score: {username} ({matchResult.p1Wins > matchResult.p2Wins ? matchResult.p1Wins : matchResult.p2Wins}) - {opponentName} ({matchResult.p1Wins < matchResult.p2Wins ? matchResult.p1Wins : matchResult.p2Wins})</p>
-            <button className="btn-primary" onClick={() => navigate('home')}>Return to Menu</button>
+            <h2>{matchResult.winner === username ? t('match_victory') : (matchResult.winner === 'Draw' ? t('match_draw') : t('match_defeat'))}</h2>
+            <p style={{ margin: '15px 0' }}>{t('score')}{username} ({matchResult.p1Wins > matchResult.p2Wins ? matchResult.p1Wins : matchResult.p2Wins}) - {opponentName} ({matchResult.p1Wins < matchResult.p2Wins ? matchResult.p1Wins : matchResult.p2Wins})</p>
+            <button className="btn-primary" onClick={() => navigate('home')}>{t('return_menu')}</button>
           </div>
         </div>
       )}
