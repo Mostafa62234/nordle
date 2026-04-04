@@ -140,6 +140,8 @@ io.on('connection', (socket) => {
 
     socket.username = username;
     socket.difficulty = difficulty;
+    try { socket.totalScore = user.total_score || 0; } catch(e) {}
+
     
     if (queues[difficulty].includes(socket)) return;
 
@@ -229,7 +231,9 @@ function startRound(roomId) {
     digitCount: conf.digits, 
     maxTries: conf.tries,
     p1: room.players[0].username,
-    p2: room.players[1].username
+    p1Score: room.players[0].totalScore,
+    p2: room.players[1].username,
+    p2Score: room.players[1].totalScore
   });
 }
 

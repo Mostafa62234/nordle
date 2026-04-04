@@ -14,6 +14,7 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
   const [animatingRow, setAnimatingRow] = useState(-1);
   const [keyStatus, setKeyStatus] = useState({});
   const [opponentName, setOpponentName] = useState('Opponent');
+  const [opponentScore, setOpponentScore] = useState(0);
   
   const [roundResult, setRoundResult] = useState(null);
   const [matchResult, setMatchResult] = useState(null);
@@ -28,6 +29,7 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
       setDigits(data.digitCount);
       setMaxTries(data.maxTries);
       setOpponentName(data.p1 === username ? data.p2 : data.p1);
+      setOpponentScore(data.p1 === username ? data.p2Score : data.p1Score);
       
       setGuesses([]);
       setCurrentGuess('');
@@ -43,6 +45,8 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
         letters: guess.split(''),
         status: result
       };
+
+      setCurrentGuess('');
 
       setGuesses(prev => {
         const newGuesses = [...prev, newGuessObj];
@@ -122,7 +126,10 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
       <header className="app-header">
         <button className="header-btn left" onClick={() => navigate('home')}>{t('quit')}</button>
         <span className="app-title">{t('pvp')} ({t('round_of')} {round}/3)</span>
-        <span className="header-btn right" style={{ fontSize: '0.8rem', color: '#ccc' }}>{t('vs')} {opponentName}</span>
+        <span className="header-btn right" style={{ fontSize: '0.8rem', color: '#ccc', textAlign: 'right' }}>
+          {t('vs')} {opponentName}
+          <br /><span style={{ fontSize: '0.65rem', color: 'var(--color-yellow)' }}>Score: {opponentScore}</span>
+        </span>
       </header>
 
       <GameBoard 
