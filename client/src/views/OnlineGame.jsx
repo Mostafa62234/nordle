@@ -27,6 +27,8 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
   useEffect(() => {
     if (!socket) return;
     
+    socket.emit('requestRoundState');
+
     socket.on('roundStart', (data) => {
       setRound(data.round);
       setTotalRounds(data.totalRounds);

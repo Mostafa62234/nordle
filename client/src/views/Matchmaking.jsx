@@ -17,11 +17,11 @@ export default function Matchmaking({ navigate, socket, username, difficulty, ro
       navigate('home');
     };
 
-    socket.on('roundStart', handleStart);
+    socket.on('matchFound', handleStart);
     socket.on('banned', handleBanned);
 
     return () => {
-      socket.off('roundStart', handleStart);
+      socket.off('matchFound', handleStart);
       socket.off('banned', handleBanned);
       socket.emit('leaveQueue');
     };

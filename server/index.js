@@ -171,6 +171,7 @@ io.on('connection', (socket) => {
         p2Tries: 0
       };
 
+      io.to(roomId).emit('matchFound');
       startRound(roomId);
     } else {
       queues[difficulty].push(socket);
@@ -226,6 +227,23 @@ io.on('connection', (socket) => {
     delete rooms[room.id];
   });
 
+
+  socket.on('requestRoundState', () => {
+    const room = rooms[socket.roomId];
+    if (room) {
+      const conf = difficultiesConf[room.difficulty];
+      socket.emit('roundStart', { 
+        round: room.round,
+        totalRounds: room.totalRounds,
+        digitCount: conf.digits, 
+        maxTries: conf.tries,
+        p1: room.players[0].username,
+        p1Score: room.players[0].totalScore,
+        p2: room.players[1].username,
+        p2Score: room.players[1].totalScore
+      });
+    }
+  });
 
   socket.on('submitGuess', ({ guess }) => {
     const roomId = socket.roomId;
