@@ -13,13 +13,13 @@ export default function Metrics({ navigate, username }) {
     const URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
     
     // Always fetch leaderboard
-    fetch(`${URL}/api/leaderboard`)
+    fetch(`${URL}/api/leaderboard?t=${Date.now()}`)
       .then(res => res.json())
       .then(data => setLeaderboardData(data.leaderboard || []))
       .catch(err => console.error("Could not fetch leaderboard", err));
 
     if (username) {
-      fetch(`${URL}/api/metrics/${username}`)
+      fetch(`${URL}/api/metrics/${username}?t=${Date.now()}`)
         .then(res => res.json())
         .then(data => setServerStats(data))
         .catch(err => console.error("Could not fetch server stats", err));

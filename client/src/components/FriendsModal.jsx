@@ -15,7 +15,7 @@ export default function FriendsModal({ username, socket, onClose }) {
 
   const fetchFriends = async () => {
     try {
-      const res = await fetch(`${URL}/api/friends/${username}`);
+      const res = await fetch(`${URL}/api/friends/${username}?t=${Date.now()}`);
       const data = await res.json();
       if (data.friendships) {
         setFriends(data.friendships);
