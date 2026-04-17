@@ -458,7 +458,8 @@ function finishRound(roomId, winnerId) {
 }
 
 const PORT = process.env.ALWAYSDATA_HTTPD_PORT || process.env.PORT || 3001;
+const HOST = process.env.ALWAYSDATA_HTTPD_IP || process.env.IP || '::';
 
-server.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Server listening on ${HOST}:${PORT}`);
 });
