@@ -1,3 +1,7 @@
+const fs = require('fs');
+process.on('uncaughtException', err => fs.writeFileSync(__dirname + '/crash.log', err.stack || err.toString()));
+process.on('unhandledRejection', err => fs.writeFileSync(__dirname + '/crash.log', err.stack || String(err)));
+
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
