@@ -37,6 +37,9 @@ function App() {
     }
   }, [socket, username]);
 
+  const [inviteData, setInviteData] = useState(null);
+  const [inviteDeclinedMessage, setInviteDeclinedMessage] = useState('');
+
   // Global Invite Listener
   useEffect(() => {
     if (!socket) return;
@@ -48,24 +51,13 @@ function App() {
         return;
       }
       
-      const res = window.confirm(`Match Request from ${from} (${difficulty}, ${roundsCount} Rounds). Accept?`);
-      if (res) {
-        setDifficulty(difficulty);
-        setRoundsCount(roundsCount);
-        setCurrentView('onlineGame');
-        // Let it render slightly before responding so events aren't missed, though requestRoundState handles it
-        setTimeout(() => {
-           socket.emit('respondToInvite', { from, accepted: true, difficulty, roundsCount });
-        }, 100);
-      } else {
-        socket.emit('respondToInvite', { from, accepted: false });
-      }
+      setInviteData({ from, difficulty, roundsCount });
     };
 
     const handleInviteDeclined = ({ by }) => {
-       alert(`${by} declined your challenge or is busy.`);
+       setInviteDeclinedMessage(`${by} declined your challenge or is busy.`);
        if (currentView === 'matchmaking') {
-          // If we added a specific "Waiting for friend" state we might transition back, but simple alert is fine
+          // Additional logic if needed
        }
     };
 
@@ -77,6 +69,23 @@ function App() {
       socket.off('inviteDeclined', handleInviteDeclined);
     };
   }, [socket, currentView]);
+
+  const respondToInvite = (accepted) => {
+    if (!inviteData) return;
+    const { from, difficulty, roundsCount } = inviteData;
+    setInviteData(null);
+    
+    if (accepted) {
+      setDifficulty(difficulty);
+      setRoundsCount(roundsCount);
+      setCurrentView('onlineGame');
+      setTimeout(() => {
+         socket.emit('respondToInvite', { from, accepted: true, difficulty, roundsCount });
+      }, 100);
+    } else {
+      socket.emit('respondToInvite', { from, accepted: false });
+    }
+  };
 
   // Global Button click sound effect
   useEffect(() => {
@@ -190,6 +199,32 @@ function App() {
       {currentView === 'onlineGame' && <OnlineGame navigate={navigate} socket={socket} username={username} difficulty={difficulty} />}
       {currentView === 'settings' && <Settings navigate={navigate} />}
       {currentView === 'metrics' && <Metrics navigate={navigate} username={username} />}
+
+      {inviteData && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ border: '2px solid var(--color-green)' }}>
+            <h2 style={{ color: 'var(--color-green)' }}>Custom Match Request</h2>
+            <p style={{ margin: '15px 0' }}><strong>{inviteData.from}</strong> has challenged you!</p>
+            <p style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '20px' }}>
+              Mode: {inviteData.difficulty} | Best of {inviteData.roundsCount}
+            </p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn-primary" style={{ flex: 1 }} onClick={() => respondToInvite(true)}>Accept</button>
+              <button className="btn-secondary" style={{ flex: 1 }} onClick={() => respondToInvite(false)}>Decline</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {inviteDeclinedMessage && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ border: '2px solid var(--color-yellow)' }}>
+            <h2 style={{ color: 'var(--color-yellow)' }}>Match Declined</h2>
+            <p style={{ margin: '20px 0' }}>{inviteDeclinedMessage}</p>
+            <button className="btn-primary" onClick={() => setInviteDeclinedMessage('')}>Acknowledge</button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
