@@ -23,6 +23,7 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
   const [outOfTries, setOutOfTries] = useState(false);
   const [pendingQuitApproval, setPendingQuitApproval] = useState(false);
   const [quitRequestFromOpponent, setQuitRequestFromOpponent] = useState(false);
+  const [resolvedQuitMessage, setResolvedQuitMessage] = useState(null);
 
   useEffect(() => {
     if (!socket) return;
@@ -101,14 +102,15 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
     });
 
     socket.on('quitResolved', ({ approved, quitter }) => {
+      setPendingQuitApproval(false);
+      setQuitRequestFromOpponent(false);
       if (!approved) {
-         if (quitter === username) alert(t('quit_denied') || "Opponent declined! You have been heavily penalized (-100 points).");
-         else alert(t('quit_penalized') || "Opponent retreated and was heavily penalized (-100 points).");
+         if (quitter === username) setResolvedQuitMessage(t('quit_denied') || "Opponent declined! You have been heavily penalized (-100 points).");
+         else setResolvedQuitMessage(t('quit_penalized') || "Opponent retreated and was heavily penalized (-100 points).");
       } else {
-         if (quitter === username) alert(t('quit_approved') || "Retreat approved. No points lost.");
-         else alert(t('you_approved') || "You allowed the requested retreat.");
+         if (quitter === username) setResolvedQuitMessage(t('quit_approved') || "Retreat approved. No points lost.");
+         else setResolvedQuitMessage(t('you_approved') || "You allowed the requested retreat.");
       }
-      navigate('home');
     });
 
     return () => {
@@ -123,6 +125,11 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
     };
   }, [socket, username, navigate, t]);
 
+  const handleAcknowledgeQuit = () => {
+    setResolvedQuitMessage(null);
+    navigate('home');
+  };
+
   const requestQuit = () => {
     socket.emit('requestQuit');
     setPendingQuitApproval(true);
@@ -131,13 +138,13 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
   useEffect(() => {
     const handleTriggerQuit = () => {
       // Don't request quit again if already requested or round not active
-      if (!pendingQuitApproval && isRoundActive) {
+      if (!pendingQuitApproval && !resolvedQuitMessage && isRoundActive) {
         requestQuit();
       }
     };
     window.addEventListener('triggerQuitRequest', handleTriggerQuit);
     return () => window.removeEventListener('triggerQuitRequest', handleTriggerQuit);
-  }, [pendingQuitApproval, isRoundActive, socket]);
+  }, [pendingQuitApproval, resolvedQuitMessage, isRoundActive, socket]);
 
   const answerQuitRequest = (approved) => {
     socket.emit('answerQuit', { approved, requesterUsername: opponentName });
@@ -244,6 +251,16 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
               <button className="btn-primary" style={{ flex: 1 }} onClick={() => answerQuitRequest(true)}>Approve</button>
               <button className="btn-secondary" style={{ flex: 1, backgroundColor: '#4a1111' }} onClick={() => answerQuitRequest(false)}>Decline (Punish)</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {resolvedQuitMessage && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2 style={{ color: 'white', marginBottom: '15px' }}>Match Concluded</h2>
+            <p style={{ marginBottom: '20px', color: '#ccc' }}>{resolvedQuitMessage}</p>
+            <button className="btn-primary" onClick={handleAcknowledgeQuit}>Return to Home</button>
           </div>
         </div>
       )}

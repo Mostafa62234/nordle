@@ -223,7 +223,7 @@ async function getFriendships(username) {
   const client = await pool.connect();
   try {
     const res = await client.query(`
-      SELECT requester, receiver, status 
+      SELECT id, requester, receiver, status 
       FROM friendships 
       WHERE requester = $1 OR receiver = $1
     `, [username]);

@@ -9,6 +9,7 @@ export default function FriendsModal({ username, socket, onClose }) {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [challengeDiff, setChallengeDiff] = useState('Normal');
   const [challengeRounds, setChallengeRounds] = useState(3);
+  const [feedbackMsg, setFeedbackMsg] = useState('');
 
   const URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
 
@@ -49,15 +50,25 @@ export default function FriendsModal({ username, socket, onClose }) {
   const sendRequest = async () => {
     if (!newFriend.trim()) return;
     try {
-      await fetch(`${URL}/api/friends/request`, {
+      const response = await fetch(`${URL}/api/friends/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ requester: username, receiver: newFriend.trim() })
       });
+      const data = await response.json();
       setNewFriend('');
       fetchFriends();
-      alert(`Request sent to ${newFriend}!`);
-    } catch(e) { alert('Error sending request.'); }
+
+      if (data.status === 'accepted') {
+        setFeedbackMsg(`You and ${newFriend} are now friends!`);
+      } else {
+        setFeedbackMsg(`Request sent to ${newFriend}!`);
+      }
+      setTimeout(() => setFeedbackMsg(''), 4000);
+    } catch(e) { 
+      setFeedbackMsg('Error sending request.'); 
+      setTimeout(() => setFeedbackMsg(''), 4000);
+    }
   };
 
   const acceptRequest = async (requester) => {
@@ -78,7 +89,8 @@ export default function FriendsModal({ username, socket, onClose }) {
       difficulty: challengeDiff, 
       roundsCount: challengeRounds 
     });
-    alert(`Challenge sent to ${selectedFriend}! Waiting for response...`);
+    setFeedbackMsg(`Challenge sent to ${selectedFriend}! Waiting for response...`);
+    setTimeout(() => setFeedbackMsg(''), 4000);
     setSelectedFriend(null);
   };
 
@@ -90,6 +102,12 @@ export default function FriendsModal({ username, socket, onClose }) {
           <h2 style={{ margin: 0, color: 'var(--color-green)' }}>Friends</h2>
           <button onClick={onClose} style={{ background: 'transparent', color: '#fff', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
         </div>
+
+        {feedbackMsg && (
+          <div style={{ background: '#3b82f6', color: 'white', padding: '10px', borderRadius: '5px', marginBottom: '15px', textAlign: 'center', fontSize: '0.9rem' }}>
+            {feedbackMsg}
+          </div>
+        )}
 
         {/* Add Friend */}
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
@@ -109,7 +127,7 @@ export default function FriendsModal({ username, socket, onClose }) {
             <div style={{ marginBottom: '20px' }}>
               <h4 style={{ color: 'var(--color-yellow)', marginBottom: '10px' }}>Pending Incoming</h4>
               {friends.filter(f => f.status === 'pending' && f.receiver === username).map(f => (
-                <div key={f.id} style={{ display: 'flex', justifyContent: 'space-between', background: '#2c2c2e', padding: '10px', borderRadius: '8px', marginBottom: '5px' }}>
+                <div key={f.id || f.requester} style={{ display: 'flex', justifyContent: 'space-between', background: '#2c2c2e', padding: '10px', borderRadius: '8px', marginBottom: '5px' }}>
                   <span>{f.requester}</span>
                   <button onClick={() => acceptRequest(f.requester)} style={{ background: 'var(--color-green)', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Accept</button>
                 </div>
@@ -124,7 +142,7 @@ export default function FriendsModal({ username, socket, onClose }) {
             const friendName = f.requester === username ? f.receiver : f.requester;
             const isOnline = !!onlineStatuses[friendName];
             return (
-              <div key={f.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#2c2c2e', padding: '10px', borderRadius: '8px', marginBottom: '5px' }}>
+              <div key={f.id || friendName} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#2c2c2e', padding: '10px', borderRadius: '8px', marginBottom: '5px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: isOnline ? 'var(--color-green)' : '#555' }} />
                   <span>{friendName}</span>
