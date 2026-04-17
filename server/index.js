@@ -124,6 +124,34 @@ app.post('/api/friends/accept', async (req, res) => {
   }
 });
 
+app.post('/api/friends/remove', async (req, res) => {
+  const { user1, user2 } = req.body;
+  if (!user1 || !user2) return res.status(400).json({ error: 'Missing parameters' });
+  try {
+    await db.removeFriend(user1, user2);
+    res.json({ success: true });
+    // Notify user2 if online
+    const target = activeUsers[user2];
+    if (target) io.to(target).emit('friendRemoved', { by: user1 });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/friends/block', async (req, res) => {
+  const { blocker, blocked } = req.body;
+  if (!blocker || !blocked) return res.status(400).json({ error: 'Missing parameters' });
+  try {
+    await db.blockUser(blocker, blocked);
+    res.json({ success: true });
+    // Notify blocked user so their frontend drops the blocker
+    const target = activeUsers[blocked];
+    if (target) io.to(target).emit('friendRemoved', { by: blocker });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/friends/:username', async (req, res) => {
   try {
     const friendships = await db.getFriendships(req.params.username);

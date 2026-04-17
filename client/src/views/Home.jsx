@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../LanguageContext';
 import FriendsModal from '../components/FriendsModal';
+import NotificationsModal from '../components/NotificationsModal';
 
 const NavItem = ({ iconPaths, label, onClick, iconBgColor, iconColor }) => {
   return (
@@ -43,6 +44,40 @@ export default function Home({ navigate, username, socket }) {
   const { t, lang, setLang } = useLanguage();
   const [showFriends, setShowFriends] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [systemAlerts, setSystemAlerts] = useState([]);
+
+  // Check for unread notifications
+  React.useEffect(() => {
+    if (!username) return;
+    const URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+    
+    const fetchUnread = () => {
+      fetch(`${URL}/api/friends/${username}?t=${Date.now()}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.friendships) {
+              const pending = data.friendships.filter(f => f.status === 'pending' && f.receiver === username);
+              setUnreadCount(pending.length);
+            }
+        }).catch(() => {});
+    };
+
+    fetchUnread();
+
+    if (socket) {
+      socket.on('friendRequestReceived', fetchUnread);
+      socket.on('systemAlert', (msg) => {
+        setSystemAlerts(prev => [msg, ...prev]);
+        setUnreadCount(c => c + 1);
+      });
+      return () => {
+        socket.off('friendRequestReceived', fetchUnread);
+        socket.off('systemAlert');
+      };
+    }
+  }, [username, socket]);
   
   const handleRestrictedAction = (action) => {
     if (!username) {
@@ -94,9 +129,46 @@ export default function Home({ navigate, username, socket }) {
         </button>
       </div>
 
-      <div style={{ position: 'absolute', top: 10, right: 10, color: '#aaa', fontSize: '1rem', fontWeight: 'bold' }}>
-        {username || 'Guest'}
+      <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', alignItems: 'center', gap: '15px' }}>
+        {username && (
+          <div style={{ position: 'relative' }}>
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              style={{
+                background: 'transparent', border: 'none', cursor: 'pointer', outline: 'none'
+              }}
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </button>
+            {unreadCount > 0 && (
+              <div style={{ 
+                position: 'absolute', top: '-5px', right: '-5px', 
+                backgroundColor: 'red', color: 'white', fontSize: '0.7rem', 
+                fontWeight: 'bold', width: '18px', height: '18px', 
+                borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' 
+              }}>
+                {unreadCount}
+              </div>
+            )}
+          </div>
+        )}
+        <div style={{ color: '#aaa', fontSize: '1rem', fontWeight: 'bold' }}>
+          {username || 'Guest'}
+        </div>
       </div>
+      
+      {showNotifications && (
+        <NotificationsModal 
+           username={username} socket={socket} 
+           onClose={() => setShowNotifications(false)}
+           setUnreadCount={setUnreadCount} 
+           systemAlerts={systemAlerts}
+           setSystemAlerts={setSystemAlerts}
+        />
+      )}
       
       {/* Title */}
       <h1 dir="ltr" style={{ direction: 'ltr', fontSize: '4.5rem', marginBottom: '10px', display: 'flex', gap: '2px', fontWeight: '900', letterSpacing: '1px' }}>

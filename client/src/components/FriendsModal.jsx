@@ -77,12 +77,18 @@ export default function FriendsModal({ username, socket, onClose }) {
     }
   };
 
-  const acceptRequest = async (requester) => {
+  // Pending requests moved to NotificationsModal
+
+  const handleAction = async (actionUrl, targetUsername) => {
+    if (!window.confirm(`Are you sure you want to ${actionUrl.split('/').pop()} ${targetUsername}?`)) return;
     try {
-      await fetch(`${URL}/api/friends/accept`, {
+      await fetch(`${URL}${actionUrl}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requester, receiver: username })
+        body: JSON.stringify(actionUrl.includes('remove') 
+          ? { user1: username, user2: targetUsername } 
+          : { blocker: username, blocked: targetUsername }
+        )
       });
       fetchFriends();
     } catch(e) { }
@@ -127,21 +133,8 @@ export default function FriendsModal({ username, socket, onClose }) {
           <button className="btn-primary" onClick={sendRequest} style={{ padding: '0 15px' }}>Add</button>
         </div>
 
-        {/* Pending Requests */}
+        {/* Pending Requests moved to Notification Bell */}
         <div style={{ overflowY: 'auto', flex: 1 }}>
-          {friends.filter(f => f.status === 'pending' && f.receiver === username).length > 0 && (
-            <div style={{ marginBottom: '20px' }}>
-              <h4 style={{ color: 'var(--color-yellow)', marginBottom: '10px' }}>Pending Incoming</h4>
-              {friends.filter(f => f.status === 'pending' && f.receiver === username).map(f => (
-                <div key={f.id || f.requester} style={{ display: 'flex', justifyContent: 'space-between', background: '#2c2c2e', padding: '10px', borderRadius: '8px', marginBottom: '5px' }}>
-                  <span>{f.requester}</span>
-                  <button onClick={() => acceptRequest(f.requester)} style={{ background: 'var(--color-green)', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Accept</button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Friends List */}
           <h4 style={{ color: '#aaa', marginBottom: '10px' }}>My Friends</h4>
           {friends.filter(f => f.status === 'accepted').length === 0 && <p style={{ color: '#555' }}>No friends yet.</p>}
           {friends.filter(f => f.status === 'accepted').map(f => {
@@ -153,9 +146,13 @@ export default function FriendsModal({ username, socket, onClose }) {
                   <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: isOnline ? 'var(--color-green)' : '#555' }} />
                   <span>{friendName}</span>
                 </div>
-                {isOnline && (
-                  <button onClick={() => setSelectedFriend(friendName)} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Challenge</button>
-                )}
+                <div style={{ display: 'flex', gap: '5px' }}>
+                  {isOnline && (
+                    <button onClick={() => setSelectedFriend(friendName)} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Challenge</button>
+                  )}
+                  <button onClick={() => handleAction('/api/friends/remove', friendName)} title="Unfriend" style={{ background: '#3f3f46', color: '#ffb3b3', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>✖</button>
+                  <button onClick={() => handleAction('/api/friends/block', friendName)} title="Block" style={{ background: '#7f1d1d', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>🚫</button>
+                </div>
               </div>
             );
           })}

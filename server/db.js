@@ -191,9 +191,13 @@ async function deductPoints(username, amount) {
 async function sendFriendRequest(requester, receiver) {
   const client = await pool.connect();
   try {
+    const blockCheck = await client.query('SELECT status FROM friendships WHERE (requester = $1 AND receiver = $2) OR (requester = $2 AND receiver = $1)', [requester, receiver]);
+    const blocked = blockCheck.rows.find(r => r.status === 'blocked');
+    if (blocked) return { status: 'blocked' };
+
     // Check if reverse request exists
-    const checkRes = await client.query('SELECT status FROM friendships WHERE requester = $1 AND receiver = $2', [receiver, requester]);
-    if (checkRes.rows.length > 0 && checkRes.rows[0].status === 'pending') {
+    const pendingReverse = blockCheck.rows.find(r => r.status === 'pending' && r.requester === receiver && r.receiver === requester);
+    if (pendingReverse) {
       // Auto-accept if they already requested us
       await client.query('UPDATE friendships SET status = $1 WHERE requester = $2 AND receiver = $3', ['accepted', receiver, requester]);
       return { status: 'accepted' };
@@ -222,10 +226,12 @@ async function acceptFriendRequest(requester, receiver) {
 async function getFriendships(username) {
   const client = await pool.connect();
   try {
+    // Only return blocked users if WE are the one who blocked them (so we can unblock). Do not reveal to the blocked victim.
     const res = await client.query(`
       SELECT id, requester, receiver, status 
       FROM friendships 
-      WHERE requester = $1 OR receiver = $1
+      WHERE (requester = $1 OR receiver = $1)
+      AND NOT (status = 'blocked' AND receiver = $1)
     `, [username]);
     return res.rows;
   } finally {
@@ -247,8 +253,29 @@ async function getUserProfile(username) {
   }
 }
 
+async function removeFriend(user1, user2) {
+  const client = await pool.connect();
+  try {
+    await client.query('DELETE FROM friendships WHERE (requester = $1 AND receiver = $2) OR (requester = $2 AND receiver = $1)', [user1, user2]);
+  } finally {
+    client.release();
+  }
+}
+
+async function blockUser(blocker, blocked) {
+  const client = await pool.connect();
+  try {
+    // Wipe any existing relationship first
+    await client.query('DELETE FROM friendships WHERE (requester = $1 AND receiver = $2) OR (requester = $2 AND receiver = $1)', [blocker, blocked]);
+    // Insert strict block
+    await client.query('INSERT INTO friendships (requester, receiver, status) VALUES ($1, $2, $3)', [blocker, blocked, 'blocked']);
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = { 
   getUser, getUserProfile, updateOfflineStats, updateOnlineStats, getLeaderboard, getUserRank, 
   getAllUsersAdmin, setBanStatus, deductPoints,
-  sendFriendRequest, acceptFriendRequest, getFriendships
+  sendFriendRequest, acceptFriendRequest, getFriendships, removeFriend, blockUser
 };
