@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "start": "serve -s dist",
     "lint": "eslint .",
     "preview": "vite preview",
     "convert-icon": "node convert-icon.js",
@@ -14,9 +15,13 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",
+    "@capacitor/app": "^8.1.0",
     "@capacitor/core": "^8.3.0",
+    "@capacitor/keyboard": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "serve": "^14.2.6",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {

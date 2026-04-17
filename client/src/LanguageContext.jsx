@@ -67,7 +67,14 @@ const dictionary = {
     "score": "Score: ",
     "return_menu": "Return to Menu",
     "credits_btn": "About the Developer",
-    "credits_text": "This app is entirely developed and programmed by Mostafa Mohamed. Future games coming soon!"
+    "credits_text": "This app is entirely developed and programmed by Mostafa Mohamed. Future games coming soon!",
+    "htp_title": "How To Play",
+    "htp_step1": "Guess the secret numeric code in the given number of tries.",
+    "htp_step2": "Each guess must be a valid sequence of digits.",
+    "htp_step3": "After each guess, the color of the tiles will change to show how close your guess was.",
+    "htp_green": "Green: The digit is in the code and in the correct spot.",
+    "htp_yellow": "Yellow: The digit is in the code but in the wrong spot.",
+    "htp_gray": "Gray: The digit is not in the code at all."
   },
   ar: {
     "login_title": "تسجيل الدخول",
@@ -133,7 +140,14 @@ const dictionary = {
     "score": "النتيجة: ",
     "return_menu": "العودة للقائمة",
     "credits_btn": "عن المطور",
-    "credits_text": "هذا التطبيق تم تطويره وبرمجته بالكامل بواسطة مصطفى محمد، ألعاب مستقبلية قادمة قريباً!"
+    "credits_text": "هذا التطبيق تم تطويره وبرمجته بالكامل بواسطة مصطفى محمد، ألعاب مستقبلية قادمة قريباً!",
+    "htp_title": "طريقة اللعب",
+    "htp_step1": "خمن الرمز الرقمي السري في عدد محدد من المحاولات.",
+    "htp_step2": "كل تخمين يجب أن يكون تسلسلاً صحيحاً من الأرقام.",
+    "htp_step3": "بعد كل تخمين، سيتغير لون المربعات لتوضيح مدى صحة تخمينك.",
+    "htp_green": "الأخضر: الرقم الصحيح وفي المكان الصحيح.",
+    "htp_yellow": "الأصفر: الرقم الصحيح ولكن في المكان الخاطئ.",
+    "htp_gray": "الرمادي: الرقم غير موجود في الرمز على الإطلاق."
   }
 };
 

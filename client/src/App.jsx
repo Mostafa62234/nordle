@@ -109,6 +109,72 @@ function App() {
     };
   }, [currentView]);
 
+  // Handle Capacitor native features (Splash, Keyboard, Back Button)
+  useEffect(() => {
+    const setupNative = async () => {
+      try {
+        const { SplashScreen } = await import('@capacitor/splash-screen');
+        await SplashScreen.hide();
+      } catch (e) {
+        console.log('SplashScreen plugin not available', e);
+      }
+    };
+    setupNative();
+  }, []);
+
+  useEffect(() => {
+    let backButtonListener = null;
+
+    const setupBackButton = async () => {
+      try {
+        const { App: CapacitorApp } = await import('@capacitor/app');
+        
+        backButtonListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+          setCurrentView(prevView => {
+            switch (prevView) {
+              case 'login':
+              case 'home':
+                CapacitorApp.exitApp();
+                return prevView;
+              case 'difficultySelect':
+              case 'difficultySelectOnline':
+              case 'settings':
+              case 'metrics':
+                return 'home';
+              case 'offlineGame':
+                return 'difficultySelect';
+              case 'matchmaking':
+                // Note: user might still be in matchmaking pool on server,
+                // but component unmount should fire something if handled, or they just go back.
+                return 'difficultySelectOnline';
+              case 'onlineGame':
+                // Custom event for OnlineGame.jsx to handle quit request
+                window.dispatchEvent(new Event('triggerQuitRequest'));
+                return prevView; // Don't change view here
+              default:
+                if (canGoBack) {
+                  window.history.back();
+                } else {
+                  CapacitorApp.exitApp();
+                }
+                return prevView;
+            }
+          });
+        });
+      } catch (err) {
+        console.log('App plugin not available', err);
+      }
+    };
+    
+    setupBackButton();
+    
+    return () => {
+      if (backButtonListener) {
+        backButtonListener.remove();
+      }
+    };
+  }, []);
+
   const navigate = (view) => {
     setCurrentView(view);
   };

@@ -42,6 +42,7 @@ const NavItem = ({ iconPaths, label, onClick, iconBgColor, iconColor }) => {
 export default function Home({ navigate, username, socket }) {
   const { t, lang, setLang } = useLanguage();
   const [showFriends, setShowFriends] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
   
   const handleRestrictedAction = (action) => {
     if (!username) {
@@ -71,6 +72,25 @@ export default function Home({ navigate, username, socket }) {
           }}
         >
           {lang === 'en' ? 'عربي' : 'EN'}
+        </button>
+        <button 
+          onClick={() => setShowHowToPlay(true)}
+          style={{
+            background: 'transparent',
+            border: '1px solid #555',
+            color: 'var(--text-color)',
+            width: '30px',
+            height: '30px',
+            borderRadius: '50%',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          ?
         </button>
       </div>
 
@@ -181,6 +201,34 @@ export default function Home({ navigate, username, socket }) {
           socket={socket} 
           onClose={() => setShowFriends(false)} 
         />
+      )}
+
+      {showHowToPlay && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '90%', maxWidth: '400px', backgroundColor: '#1e1e1e', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', textAlign: lang === 'ar' ? 'right' : 'left' }}>
+            <h2 style={{ color: 'var(--color-yellow)', marginBottom: '15px' }}>{t('htp_title')}</h2>
+            <ul style={{ color: '#fff', fontSize: '1rem', lineHeight: '1.5', paddingInlineStart: '20px' }}>
+              <li style={{ marginBottom: '10px' }}>{t('htp_step1')}</li>
+              <li style={{ marginBottom: '10px' }}>{t('htp_step2')}</li>
+              <li style={{ marginBottom: '10px' }}>{t('htp_step3')}</li>
+            </ul>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '20px', height: '20px', backgroundColor: 'var(--color-green)', borderRadius: '4px', flexShrink: 0 }}></div>
+                <span style={{ color: '#fff' }}>{t('htp_green')}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '20px', height: '20px', backgroundColor: 'var(--color-yellow)', borderRadius: '4px', flexShrink: 0 }}></div>
+                <span style={{ color: '#fff' }}>{t('htp_yellow')}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '20px', height: '20px', backgroundColor: '#3f3f46', borderRadius: '4px', flexShrink: 0 }}></div>
+                <span style={{ color: '#fff' }}>{t('htp_gray')}</span>
+              </div>
+            </div>
+            <button onClick={() => setShowHowToPlay(false)} style={{ marginTop: '25px', background: 'var(--color-green)', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>OK</button>
+          </div>
+        </div>
       )}
     </div>
   );

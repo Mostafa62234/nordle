@@ -1,9 +1,9 @@
 {
   "name": "admin-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
-  "main": "main.js",
+  "main": "main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,6 +12,19 @@
     "electron:start": "cross-env NODE_ENV=development electron .",
     "start": "concurrently \"vite --port 5174\" \"wait-on http://localhost:5174 && npm run electron:start\"",
     "electron:build": "vite build && electron-builder"
+  },
+  "build": {
+    "appId": "com.nordle.admin",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "dist/**/*",
+      "main.cjs"
+    ]
   },
   "dependencies": {
     "react": "^19.2.4",
@@ -22,10 +35,15 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
-    "vite": "^8.0.1"
+    "vite": "^8.0.1",
+    "wait-on": "^7.2.0"
   }
 }

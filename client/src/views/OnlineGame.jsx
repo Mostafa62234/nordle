@@ -128,6 +128,17 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
     setPendingQuitApproval(true);
   };
 
+  useEffect(() => {
+    const handleTriggerQuit = () => {
+      // Don't request quit again if already requested or round not active
+      if (!pendingQuitApproval && isRoundActive) {
+        requestQuit();
+      }
+    };
+    window.addEventListener('triggerQuitRequest', handleTriggerQuit);
+    return () => window.removeEventListener('triggerQuitRequest', handleTriggerQuit);
+  }, [pendingQuitApproval, isRoundActive, socket]);
+
   const answerQuitRequest = (approved) => {
     socket.emit('answerQuit', { approved, requesterUsername: opponentName });
     setQuitRequestFromOpponent(false);
