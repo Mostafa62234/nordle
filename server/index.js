@@ -177,6 +177,9 @@ const activeUsers = {};
 io.on('connection', (socket) => {
   socket.on('identify', (username) => {
     if (!username) return;
+    if (socket.username && socket.username !== username) {
+      delete activeUsers[socket.username];
+    }
     socket.username = username;
     activeUsers[username] = socket.id;
     io.emit('userStatus', { username, online: true });

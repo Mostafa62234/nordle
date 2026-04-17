@@ -61,12 +61,20 @@ function App() {
        }
     };
 
+    const handleMatchFound = () => {
+       if (currentView !== 'onlineGame') {
+          setCurrentView('onlineGame');
+       }
+    };
+
     socket.on('receiveInvite', handleReceiveInvite);
     socket.on('inviteDeclined', handleInviteDeclined);
+    socket.on('matchFound', handleMatchFound);
     
     return () => {
       socket.off('receiveInvite', handleReceiveInvite);
       socket.off('inviteDeclined', handleInviteDeclined);
+      socket.off('matchFound', handleMatchFound);
     };
   }, [socket, currentView]);
 
