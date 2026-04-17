@@ -15,6 +15,8 @@ export default function Login({ navigate, setUsername }) {
     }
   }, []);
 
+  const [loginError, setLoginError] = useState('');
+
   const handleLogin = async () => {
     if (!val) return;
     try {
@@ -33,15 +35,17 @@ export default function Login({ navigate, setUsername }) {
       } else {
         const errorData = await res.json().catch(() => null);
         if (errorData && errorData.error === 'Invalid password') {
-          alert('Incorrect Password! Please try again.');
+          setLoginError('Incorrect Password! Please try again.');
           return;
         }
-        alert("Server issue (" + res.status + "). Entering Offline Mode as Guest.");
-        setUsername('');
-        navigate('home');
+        setLoginError("Server logic issue (" + res.status + "). Let's try to enter Offline Mode.");
+        setTimeout(() => {
+          setUsername('');
+          navigate('home');
+        }, 3000);
       }
     } catch (err) {
-      alert("No internet connection or server is unreachable.");
+      setLoginError("No internet connection or server is unreachable. Please verify the server is running!");
     }
   };
 
@@ -74,6 +78,16 @@ export default function Login({ navigate, setUsername }) {
           Play Offline (Guest)
         </button>
       </div>
+
+      {loginError && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ border: '2px solid var(--color-red)' }}>
+            <h2 style={{ color: 'var(--color-red)' }}>Login Failed</h2>
+            <p style={{ margin: '20px 0', color: '#ccc' }}>{loginError}</p>
+            <button className="btn-primary" onClick={() => setLoginError('')}>Acknowledge</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
