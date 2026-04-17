@@ -38,12 +38,18 @@ export default function FriendsModal({ username, socket, onClose }) {
       setOnlineStatuses(prev => ({...prev, [uName]: online}));
     };
 
+    const handleFriendRequestAccepted = () => {
+      fetchFriends();
+    };
+
     socket.on('statusesResult', handleStatusesResult);
     socket.on('userStatus', handleUserStatus);
+    socket.on('friendRequestAccepted', handleFriendRequestAccepted);
 
     return () => {
       socket.off('statusesResult', handleStatusesResult);
       socket.off('userStatus', handleUserStatus);
+      socket.off('friendRequestAccepted', handleFriendRequestAccepted);
     };
   }, [username, socket]);
 

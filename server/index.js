@@ -113,6 +113,12 @@ app.post('/api/friends/accept', async (req, res) => {
   try {
     await db.acceptFriendRequest(requester, receiver);
     res.json({ success: true });
+    
+    // Notify the requester instantly
+    const targetSocketId = activeUsers[requester];
+    if (targetSocketId) {
+      io.to(targetSocketId).emit('friendRequestAccepted', { by: receiver });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
