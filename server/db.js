@@ -180,7 +180,7 @@ async function deductPoints(username, amount) {
   const client = await pool.connect();
   try {
     await client.query(
-      'UPDATE users SET total_score = total_score - $1 WHERE username = $2',
+      'UPDATE users SET total_score = GREATEST(0, total_score - $1) WHERE username = $2',
       [amount, username]
     );
   } finally {

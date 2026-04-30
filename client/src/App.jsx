@@ -10,7 +10,7 @@ import OnlineGame from './views/OnlineGame';
 import Settings from './views/Settings';
 import './index.css';
 
-import buttonSfxFile from '../sfx/button-sfx.wav';
+import { playButtonSound } from './sounds';
 import onlineSfxFile from '../sfx/online-sfx.mp3';
 
 function App() {
@@ -45,8 +45,8 @@ function App() {
     if (!socket) return;
     
     const handleReceiveInvite = ({ from, difficulty, roundsCount }) => {
-      // Auto-decline if mid-match
-      if (currentView === 'offlineGame' || currentView === 'onlineGame' || currentView === 'matchmaking') {
+      // Auto-decline if mid-match or already has an invite shown
+      if (currentView === 'offlineGame' || currentView === 'onlineGame' || currentView === 'matchmaking' || inviteData) {
         socket.emit('respondToInvite', { from, accepted: false });
         return;
       }
@@ -99,9 +99,7 @@ function App() {
   useEffect(() => {
     const handleGlobalClick = (e) => {
       if (e.target.closest('button')) {
-        const audio = new Audio(buttonSfxFile);
-        audio.volume = 0.5;
-        audio.play().catch(err => console.log('Button audio play failed:', err));
+        playButtonSound();
       }
     };
     document.addEventListener('click', handleGlobalClick);

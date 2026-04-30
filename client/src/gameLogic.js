@@ -27,13 +27,11 @@ export function evaluateGuess(guessStr, secretStr) {
 }
 
 export function generateSecret(length) {
+  const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
   let secret = '';
   for (let i = 0; i < length; i++) {
-    let digit = Math.floor(Math.random() * 10).toString();
-    if (secret.includes(digit) && Math.random() < 0.8) {
-      digit = Math.floor(Math.random() * 10).toString();
-    }
-    secret += digit;
+    const randomIndex = Math.floor(Math.random() * digits.length);
+    secret += digits.splice(randomIndex, 1)[0];
   }
   return secret;
 }

@@ -101,6 +101,12 @@ app.post('/api/friends/request', async (req, res) => {
   if (!requester || !receiver) return res.status(400).json({ error: 'Missing parameters' });
   try {
     const result = await db.sendFriendRequest(requester, receiver);
+    if (result.status === 'pending') {
+      const targetSockets = activeUsers[receiver];
+      if (targetSockets) {
+        targetSockets.forEach(sid => io.to(sid).emit('friendRequestReceived', { by: requester }));
+      }
+    }
     res.json(result); // { status: 'pending' | 'accepted' }
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -115,9 +121,9 @@ app.post('/api/friends/accept', async (req, res) => {
     res.json({ success: true });
     
     // Notify the requester instantly
-    const targetSocketId = activeUsers[requester];
-    if (targetSocketId) {
-      io.to(targetSocketId).emit('friendRequestAccepted', { by: receiver });
+    const targetSockets = activeUsers[requester];
+    if (targetSockets) {
+      targetSockets.forEach(sid => io.to(sid).emit('friendRequestAccepted', { by: receiver }));
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -145,8 +151,10 @@ app.post('/api/friends/block', async (req, res) => {
     await db.blockUser(blocker, blocked);
     res.json({ success: true });
     // Notify blocked user so their frontend drops the blocker
-    const target = activeUsers[blocked];
-    if (target) io.to(target).emit('friendRemoved', { by: blocker });
+    const targetSockets = activeUsers[blocked];
+    if (targetSockets) {
+      targetSockets.forEach(sid => io.to(sid).emit('friendRemoved', { by: blocker }));
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -174,13 +182,11 @@ const difficultiesConf = {
 const rooms = {};
 
 function generateSecret(length) {
+  const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
   let secret = '';
   for (let i = 0; i < length; i++) {
-    let digit = Math.floor(Math.random() * 10).toString();
-    if (secret.includes(digit) && Math.random() < 0.8) {
-      digit = Math.floor(Math.random() * 10).toString();
-    }
-    secret += digit;
+    const randomIndex = Math.floor(Math.random() * digits.length);
+    secret += digits.splice(randomIndex, 1)[0];
   }
   return secret;
 }
@@ -210,48 +216,60 @@ function evaluateGuess(guessStr, secretStr) {
   return result;
 }
 
-const activeUsers = {};
+const activeUsers = {}; // username -> Set of socket.ids
 
 io.on('connection', (socket) => {
   socket.on('identify', (username) => {
     if (!username) return;
     if (socket.username && socket.username !== username) {
-      delete activeUsers[socket.username];
+      if (activeUsers[socket.username]) {
+        activeUsers[socket.username].delete(socket.id);
+        if (activeUsers[socket.username].size === 0) {
+          delete activeUsers[socket.username];
+          io.emit('userStatus', { username: socket.username, online: false });
+        }
+      }
     }
     socket.username = username;
-    activeUsers[username] = socket.id;
-    io.emit('userStatus', { username, online: true });
+    if (!activeUsers[username]) {
+      activeUsers[username] = new Set();
+      io.emit('userStatus', { username, online: true });
+    }
+    activeUsers[username].add(socket.id);
   });
 
   socket.on('checkStatuses', (usernames) => {
     if (!Array.isArray(usernames)) return;
     const statuses = {};
     for (const u of usernames) {
-      statuses[u] = !!activeUsers[u];
+      statuses[u] = !!(activeUsers[u] && activeUsers[u].size > 0);
     }
     socket.emit('statusesResult', statuses);
   });
 
   socket.on('inviteFriend', ({ targetUsername, difficulty, roundsCount }) => {
-    const targetSocketId = activeUsers[targetUsername];
-    if (targetSocketId) {
-      io.to(targetSocketId).emit('receiveInvite', { 
-        from: socket.username, 
-        difficulty, 
-        roundsCount 
+    const sockets = activeUsers[targetUsername];
+    if (sockets) {
+      sockets.forEach(sid => {
+        io.to(sid).emit('receiveInvite', { 
+          from: socket.username, 
+          difficulty, 
+          roundsCount 
+        });
       });
     }
   });
 
   socket.on('respondToInvite', ({ from, accepted, difficulty, roundsCount }) => {
-    const requesterSocketId = activeUsers[from];
-    if (!requesterSocketId) return; // Requester disconnected
+    const requesterSockets = activeUsers[from];
+    if (!requesterSockets || requesterSockets.size === 0) return; // Requester disconnected
 
     if (!accepted) {
       io.to(requesterSocketId).emit('inviteDeclined', { by: socket.username });
       return;
     }
 
+    const requesterSocketId = Array.from(requesterSockets)[0]; // Just pick one for simplicity or we could broadcast.
     const requesterSocket = io.sockets.sockets.get(requesterSocketId);
     if (!requesterSocket) return;
 
@@ -343,9 +361,12 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', async () => {
-    if (socket.username) {
-      delete activeUsers[socket.username];
-      io.emit('userStatus', { username: socket.username, online: false });
+    if (socket.username && activeUsers[socket.username]) {
+      activeUsers[socket.username].delete(socket.id);
+      if (activeUsers[socket.username].size === 0) {
+        delete activeUsers[socket.username];
+        io.emit('userStatus', { username: socket.username, online: false });
+      }
     }
 
     for (const diff in queues) {

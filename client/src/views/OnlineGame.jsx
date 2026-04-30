@@ -157,7 +157,7 @@ export default function OnlineGame({ navigate, socket, username, difficulty }) {
 
     if (key === 'Enter') {
       if (currentGuess.length !== digits) return;
-      socket.emit('submitGuess', { roomId: socket.roomId, guess: currentGuess });
+      socket.emit('submitGuess', { guess: currentGuess });
       // The roomId doesn't need to be tracked by the client if we just send it... wait, we need roomId? 
       // Actually Server doesn't need roomId if we look it up by socket, but we didn't save room to socket.
       // Let's modify index.js to just use socket.roomId or we can just send it. Let's fix server index.js to track socket.roomId!

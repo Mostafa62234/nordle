@@ -7,19 +7,7 @@ const NavItem = ({ iconPaths, label, onClick, iconBgColor, iconColor }) => {
   return (
     <button 
       onClick={onClick}
-      style={{
-        width: '100%',
-        backgroundColor: '#1f1f1f',
-        border: '1px solid #333',
-        borderRadius: '16px',
-        padding: '12px',
-        display: 'flex',
-        alignItems: 'center',
-        marginBottom: '16px',
-        cursor: 'pointer',
-        color: '#fff',
-        transition: 'background-color 0.2s'
-      }}
+      className="nav-item"
     >
       <div style={{
         width: '48px',

@@ -3,9 +3,9 @@ import GameBoard from '../components/GameBoard';
 import Keyboard from '../components/Keyboard';
 import { DIFFICULTIES, generateSecret, evaluateGuess } from '../gameLogic';
 import { saveGameResult } from '../metrics';
-import { incrementAdCounter, resetAdCounter } from '../mockAdManager';
 import { useLanguage } from '../LanguageContext';
 import { playWinSound, playLoseSound } from '../sounds';
+import AdSenseBanner from '../components/AdSenseBanner';
 
 export default function OfflineGame({ navigate, difficulty, username }) {
   const { t } = useLanguage();
@@ -16,8 +16,6 @@ export default function OfflineGame({ navigate, difficulty, username }) {
   const [gameWon, setGameWon] = useState(false);
   const [animatingRow, setAnimatingRow] = useState(-1);
   const [keyStatus, setKeyStatus] = useState({});
-  const [showAd, setShowAd] = useState(false);
-  const [showRewardedAd, setShowRewardedAd] = useState(false);
   const [hintGiven, setHintGiven] = useState(false);
 
   const conf = DIFFICULTIES[difficulty] || DIFFICULTIES['Normal'];
@@ -33,8 +31,6 @@ export default function OfflineGame({ navigate, difficulty, username }) {
     setGameOver(false);
     setGameWon(false);
     setKeyStatus({});
-    setShowAd(false);
-    setShowRewardedAd(false);
     setHintGiven(false);
   };
 
@@ -45,19 +41,10 @@ export default function OfflineGame({ navigate, difficulty, username }) {
     
     if (won) playWinSound();
     else playLoseSound();
-    
-    // Process Interstitial Ad Check
-    const adCount = incrementAdCounter();
-    if (adCount >= 3) {
-      setTimeout(() => {
-        setShowAd(true);
-        resetAdCounter();
-      }, 1500); // give them a moment to see the win/lose screen before ad popup
-    }
   };
 
   const onKeyPress = (key) => {
-    if (gameOver || animatingRow !== -1 || showAd || showRewardedAd) return;
+    if (gameOver || animatingRow !== -1) return;
 
     if (key === 'Enter') {
       if (currentGuess.length !== conf.digits) return;
@@ -103,7 +90,6 @@ export default function OfflineGame({ navigate, difficulty, username }) {
   };
 
   const giveHint = () => {
-    setShowRewardedAd(false);
     setHintGiven(true);
     alert(`Hint: The first digit is ${secret[0]}`);
   };
@@ -114,7 +100,7 @@ export default function OfflineGame({ navigate, difficulty, username }) {
         <button className="header-btn left" onClick={() => navigate('difficultySelect')}>←</button>
         <span className="app-title">{difficulty}</span>
         {!gameOver && !hintGiven && (
-            <button className="header-btn right" style={{fontSize: '1rem', border: 'none', background: 'none', cursor: 'pointer', color: 'white'}} onClick={() => setShowRewardedAd(true)}>💡</button>
+            <button className="header-btn right" style={{fontSize: '1rem', border: 'none', background: 'none', cursor: 'pointer', color: 'white'}} onClick={giveHint}>💡</button>
         )}
       </header>
 
@@ -128,34 +114,16 @@ export default function OfflineGame({ navigate, difficulty, username }) {
       
       <Keyboard onKeyPress={onKeyPress} keyStatus={keyStatus}/>
 
-      {gameOver && !showAd && (
+      {/* AdSense Banner ad placed below the keyboard */}
+      <AdSenseBanner />
+
+      {gameOver && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h2 style={{ marginBottom: '10px' }}>{gameWon ? t('victory') : t('game_over')}</h2>
             <p style={{ marginBottom: '20px' }}>{t('secret_was')}<strong>{secret}</strong></p>
             <button className="btn-primary" onClick={initGame}>{t('play_again_btn')}</button>
             <button className="btn-secondary" onClick={() => navigate('home')}>{t('home_btn')}</button>
-          </div>
-        </div>
-      )}
-
-      {showAd && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ backgroundColor: '#2a2a2a', border: '2px solid var(--color-yellow)' }}>
-            <h2 style={{ marginBottom: '10px', color: 'var(--color-yellow)' }}>ADVERTISEMENT</h2>
-            <p style={{ marginBottom: '20px' }}>Please enjoy this 5 second break from Nordle!</p>
-            <button className="btn-secondary" onClick={() => setShowAd(false)}>Close Ad</button>
-          </div>
-        </div>
-      )}
-
-      {showRewardedAd && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ backgroundColor: '#1e3a8a', border: '2px solid #3b82f6' }}>
-            <h2 style={{ marginBottom: '10px', color: 'white' }}>REWARDED AD</h2>
-            <p style={{ marginBottom: '20px', color: 'white' }}>Watch a short video to receive a free hint!</p>
-            <button className="btn-primary" onClick={giveHint}>Watch Ad</button>
-            <button className="btn-secondary" onClick={() => setShowRewardedAd(false)}>No Thanks</button>
           </div>
         </div>
       )}
